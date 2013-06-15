@@ -33,8 +33,12 @@ describe('ConfigWriter', function () {
       var c = new ConfigWriter( flow, [], {input: 'app', dest: 'dist', staging: '.tmp'} );
       var config = c.process(file);
       assert.deepEqual(config, helpers.normalize({
-        'concat':{ generated: {'.tmp/concat/scripts/site.js': ['app/foo.js', 'app/bar.js', 'app/baz.js']}},
-        'uglify':{ generated: {'dist/scripts/site.js': ['.tmp/concat/scripts/site.js']}}
+        'concat':{ generated: { files: [
+          { dest: '.tmp/concat/scripts/site.js', src: ['app/foo.js', 'app/bar.js', 'app/baz.js']}
+        ]}},
+        'uglify':{ generated: { files: [
+          { dest: 'dist/scripts/site.js', src: ['.tmp/concat/scripts/site.js']}
+        ]}}
       }));
     });
 
@@ -45,8 +49,12 @@ describe('ConfigWriter', function () {
       var c = new ConfigWriter( flow, [], {input: 'app', dest: 'destination', staging: '.tmp'} );
       var config = c.process(file);
       assert.deepEqual(config, helpers.normalize({
-        'concat': {generated: {'.tmp/concat/scripts/site.js': ['app/foo.js', 'app/bar.js', 'app/baz.js']}},
-        'uglify': { generated: {'destination/scripts/site.js': ['.tmp/concat/scripts/site.js']}}
+        'concat': {generated: { files: [
+          {dest: '.tmp/concat/scripts/site.js', src: ['app/foo.js', 'app/bar.js', 'app/baz.js']}
+        ]}},
+        'uglify': { generated: { files: [
+          {dest: 'destination/scripts/site.js', src: ['.tmp/concat/scripts/site.js']}
+        ]}}
       }));
     });
 
@@ -57,8 +65,12 @@ describe('ConfigWriter', function () {
       var c = new ConfigWriter( flow, [], {input: 'app', dest: 'dist', staging: 'staging'} );
       var config = c.process(file);
       assert.deepEqual(config, helpers.normalize({
-        'concat': {generated: { 'staging/concat/scripts/site.js': ['app/foo.js', 'app/bar.js', 'app/baz.js'] }},
-        'uglify': {generated: { 'dist/scripts/site.js': ['staging/concat/scripts/site.js'] }}
+        'concat': {generated: { files: [
+          {dest: 'staging/concat/scripts/site.js', src: ['app/foo.js', 'app/bar.js', 'app/baz.js'] }
+        ]}},
+        'uglify': {generated: { files: [
+          {dest: 'dist/scripts/site.js', src: ['staging/concat/scripts/site.js'] }
+        ]}}
       }));
     });
 
@@ -68,7 +80,9 @@ describe('ConfigWriter', function () {
       var file = helpers.createFile('foo', 'app', blocks);
       var c = new ConfigWriter( flow, [], {input: 'app', dest: 'dist', staging: 'staging'} );
       var config = c.process(file);
-      assert.deepEqual(config, helpers.normalize({'uglify': { 'generated': {'dist/scripts/site.js': ['app/foo.js', 'app/bar.js', 'app/baz.js']}}}));
+      assert.deepEqual(config, helpers.normalize({'uglify': { 'generated': { files: [
+        {dest: 'dist/scripts/site.js', src: ['app/foo.js', 'app/bar.js', 'app/baz.js']}
+      ]}}}));
     });
 
     it('should allow for a configuration of the flow\'s step order', function() {
@@ -79,8 +93,14 @@ describe('ConfigWriter', function () {
       var config = c.process(file);
 
       assert.deepEqual(config, helpers.normalize({
-        'uglify': {'generated' : {'staging/uglify/foo.js': ['app/foo.js'], 'staging/uglify/bar.js': ['app/bar.js'], 'staging/uglify/baz.js': ['app/baz.js']}},
-        'concat': {'generated' : {'dist/scripts/site.js': ['staging/uglify/foo.js', 'staging/uglify/bar.js', 'staging/uglify/baz.js']}}
+        'uglify': {'generated' : { files: [
+          {dest: 'staging/uglify/foo.js', src: ['app/foo.js']},
+          {dest: 'staging/uglify/bar.js', src: ['app/bar.js']},
+          {dest: 'staging/uglify/baz.js', src: ['app/baz.js']}
+        ]}},
+        'concat': {'generated' : { files: [
+          {dest: 'dist/scripts/site.js', src: ['staging/uglify/foo.js', 'staging/uglify/bar.js', 'staging/uglify/baz.js']}
+        ]}}
       }));
     });
 
@@ -91,8 +111,8 @@ describe('ConfigWriter', function () {
       var c = new ConfigWriter( flow, [], {input: 'app', dest: 'destination', staging: '.tmp'} );
       config = c.process(file, config);
       assert.deepEqual(config, helpers.normalize({
-        'concat': {'generated': {'.tmp/concat/scripts/site.js': ['app/foo.js', 'app/bar.js', 'app/baz.js']}, 'misc': {'foo.js': 'bar.js'}},
-        'uglify': {'generated': {'destination/scripts/site.js': ['.tmp/concat/scripts/site.js']}}
+        'concat': {'generated': { files: [{dest: '.tmp/concat/scripts/site.js', src: ['app/foo.js', 'app/bar.js', 'app/baz.js']}]}, 'misc': {'foo.js': 'bar.js'}},
+        'uglify': {'generated': { files: [{dest: 'destination/scripts/site.js', src: ['.tmp/concat/scripts/site.js']}]}}
       }));
     });
 

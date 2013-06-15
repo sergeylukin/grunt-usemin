@@ -306,13 +306,17 @@ describe('useminPrepare', function () {
     var concat = grunt.config('concat');
 
     assert.ok(concat);
-    assert.ok(concat.generated[path.normalize('.tmp/concat/scripts/plugins.js')]);
-    assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/plugins.js')].length, 13);
-    assert.ok(concat.generated[path.normalize('.tmp/concat/styles/main.min.css')]);
-    assert.equal(concat.generated[path.normalize('.tmp/concat/styles/main.min.css')].length, 1);
+    assert.ok(concat.generated.files);
+    assert.equal(concat.generated.files.length, 2);
+
+    assert.equal(concat.generated.files[1].dest, '.tmp/concat/scripts/plugins.js');
+    assert.equal(concat.generated.files[1].src.length, 13);
+    assert.equal(concat.generated.files[0].dest, '.tmp/concat/styles/main.min.css');
+    assert.equal(concat.generated.files[0].src.length, 1);
 
     var uglify = grunt.config('uglify');
-    assert.equal(uglify.generated[path.normalize('dist/scripts/plugins.js')], path.normalize('.tmp/concat/scripts/plugins.js'));
+    assert.equal(uglify.generated.files[1].dest, 'dist/scripts/plugins.js');
+    assert.deepEqual(uglify.generated.files[1].src, [path.normalize('.tmp/concat/scripts/plugins.js')]);
   });
 
   it('should use alternate search dir if asked to', function () {
@@ -325,13 +329,12 @@ describe('useminPrepare', function () {
 
     var concat = grunt.config('concat');
     assert.ok(concat);
-    assert.ok(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')]);
-    assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')].length, 2);
-    assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')][0], path.normalize('build/scripts/bar.js'));
-    assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')][1], path.normalize('build/scripts/baz.js'));
+    assert.equal(concat.generated.files[0].dest, path.normalize('.tmp/concat/scripts/foo.js'));
+    assert.deepEqual(concat.generated.files[0].src, [path.normalize('build/scripts/bar.js'), path.normalize('build/scripts/baz.js')]);
 
     var uglify = grunt.config('uglify');
-    assert.deepEqual(uglify.generated[path.normalize('dist/scripts/foo.js')], [path.normalize('.tmp/concat/scripts/foo.js')]);
+    assert.equal(uglify.generated.files[0].dest, path.normalize('dist/scripts/foo.js'));
+    assert.deepEqual(uglify.generated.files[0].src, [path.normalize('.tmp/concat/scripts/foo.js')]);
   });
 
 
@@ -346,17 +349,18 @@ describe('useminPrepare', function () {
 
     var concat = grunt.config('concat');
     assert.ok(concat);
-    assert.ok(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')]);
-    assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')].length, 2);
+    assert.equal(concat.generated.files[0].dest, path.normalize('.tmp/concat/scripts/foo.js'));
+    assert.equal(concat.generated.files[0].src.length, 2);
 
     var uglify = grunt.config('uglify');
-    assert.deepEqual(uglify.generated[path.normalize('dist/scripts/foo.js')], [path.normalize('.tmp/concat/scripts/foo.js')]);
+    assert.equal(uglify.generated.files[0].dest, path.normalize('dist/scripts/foo.js'));
+    assert.deepEqual(uglify.generated.files[0].src, [path.normalize('.tmp/concat/scripts/foo.js')]);
   });
 
   describe('absolute path', function() {
     // This is an interesting test case: root file is foo, html file is in foo/build and js
     // sources in foo/scripts
-    // we should thus read fille in foo/scripts ...
+    // we should thus read file in foo/scripts ...
     it('should accept a root directory', function() {
       grunt.log.muted = true;
       grunt.config.init();
@@ -369,13 +373,18 @@ describe('useminPrepare', function () {
 
       var concat = grunt.config('concat');
       assert.ok(concat);
+      assert.ok(concat.generated);
+      assert.equal(concat.generated.files.length, 1);
+      var files = concat.generated.files[0];
 
-      assert.ok(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')]);
-      assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')].length, 2);
-      assert.equal(concat.generated[path.normalize('.tmp/concat/scripts/foo.js')][0], 'foo/scripts/bar.js' );
+      assert.equal(files.dest, path.normalize('.tmp/concat/scripts/foo.js'));
+      assert.equal(files.src.length, 2);
+      assert.equal(files.src[0], 'foo/scripts/bar.js');
 
       var uglify = grunt.config('uglify');
-      assert.deepEqual(uglify.generated[path.normalize('dist/scripts/foo.js')], [path.normalize('.tmp/concat/scripts/foo.js')]);
+      assert.equal(uglify.generated.files.length, 1);
+      files = uglify.generated.files[0];
+      assert.equal(files.dest, 'dist/scripts/foo.js');
     });
   });
 
@@ -388,8 +397,8 @@ describe('useminPrepare', function () {
     grunt.task.start();
 
     var uglify = grunt.config('uglify');
-
-    assert.equal(uglify.generated[path.normalize('foo/scripts/plugins.js')], path.normalize('.tmp/concat/scripts/plugins.js'));
+    assert.equal(uglify.generated.files[1].dest, 'foo/scripts/plugins.js');
+    assert.deepEqual(uglify.generated.files[1].src, [path.normalize('.tmp/concat/scripts/plugins.js')]);
 
   });
 
@@ -414,8 +423,11 @@ describe('useminPrepare', function () {
 
     assert.equal(concat, null);
     assert.ok(uglify);
+    assert.equal(uglify.generated.files.length, 2);
+    var files = uglify.generated.files[0];
 
-    assert.equal(uglify.generated[path.normalize('dist/styles/main.min.css')], path.normalize('styles/main.css'));
+    assert.equal(files.dest, path.normalize('dist/styles/main.min.css'));
+    assert.deepEqual(files.src, [path.normalize('styles/main.css')]);
 
   });
 
@@ -442,8 +454,10 @@ describe('useminPrepare', function () {
 
     assert.equal(concat, null);
     assert.ok(uglify);
-
-    assert.equal(uglify.generated[path.normalize('dist/styles/main.min.css')], path.normalize('styles/main.css'));
+    assert.equal(uglify.generated.files.length, 2);
+    var files = uglify.generated.files[0];
+    assert.equal(files.dest, 'dist/styles/main.min.css');
+    assert.deepEqual(files.src, [path.normalize('styles/main.css')]);
 
   });
 
@@ -453,9 +467,12 @@ describe('useminPrepare', function () {
         name: 'copy',
         createConfig: function(context,block) {
             var cfg = {};
+            var files = {};
             var inFiles = [];
             context.inFiles.forEach(function(file) { inFiles.push(path.join(context.inDir, file));});
-            cfg[path.join(context.outDir, block.dest)] = inFiles;
+            files.dest = path.join(context.outDir, block.dest);
+            files.src = inFiles;
+            cfg.files = [files];
             return cfg;
           }
       };
@@ -477,8 +494,8 @@ describe('useminPrepare', function () {
     var copyCfg = grunt.config('copy');
 
     assert.ok(copyCfg);
-    assert.ok(copyCfg.generated[path.normalize('dist/styles/main.min.css')]);
-    assert.ok(copyCfg.generated[path.normalize('dist/scripts/plugins.js')]);
+    assert.equal(copyCfg.generated.files[0].dest, path.normalize('dist/styles/main.min.css'));
+    assert.equal(copyCfg.generated.files[1].dest, path.normalize('dist/scripts/plugins.js'));
   });
 });
 
